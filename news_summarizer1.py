@@ -116,8 +116,8 @@ def generate_hashtags(title, content, lang='en', num_hashtags=5):
 
 # Main function to run the Streamlit app
 def main():
-    # Download the punkt tokenizer data if not already available
-    nltk.download('punkt')
+     # Download necessary NLTK data
+    nltk.download('punkt', quiet=True)  # Add quiet=True to suppress output
 
     st.title('News Summarization & Hashtag Generator App')
 
