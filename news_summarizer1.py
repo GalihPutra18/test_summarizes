@@ -1,4 +1,3 @@
-# Import libraries
 import nltk
 import streamlit as st
 import requests
@@ -12,6 +11,9 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.cluster import KMeans
 from googletrans import Translator
 
+# Specify the NLTK data directory
+nltk.data.path.append(r'C:\Users\ThinkPad i7\AppData\Roaming\nltk_data')
+
 # Download stopwords for nltk
 nltk.download('punkt')
 nltk.download('stopwords')
@@ -23,6 +25,7 @@ stop_words = {
     'es': set(stopwords.words('spanish')).union({'y', 'el', 'en', 'con', 'para', 'de'}),
     'fr': set(stopwords.words('french')).union({'et', 'le', 'est', 'dans', 'sur', 'avec'})
 }
+
 
 # Function to fetch and parse the article from the given URL
 def fetch_article(url):
