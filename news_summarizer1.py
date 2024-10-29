@@ -1,31 +1,25 @@
-import nltk
+import spacy
 import streamlit as st
 import requests
 import matplotlib.pyplot as plt
 import io
 import re
 from bs4 import BeautifulSoup
-from nltk.tokenize import sent_tokenize, word_tokenize
-from nltk.corpus import stopwords
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.cluster import KMeans
 from googletrans import Translator
 
-# Specify the NLTK data directory
-nltk.data.path.append(r'C:\Users\ThinkPad i7\AppData\Roaming\nltk_data')
-
-# Download stopwords for nltk
-nltk.download('punkt')
-nltk.download('stopwords')
+# Load SpaCy models for different languages
+nlp_en = spacy.load('en_core_web_sm')  # English
+nlp_id = spacy.load('xx_ent_wiki_sm')  # Multilingual model for Indonesian
 
 # Initialize stop words for multiple languages
 stop_words = {
-    'en': set(stopwords.words('english')).union({'said', 'will', 'also', 'one', 'new', 'make'}),
-    'id': set(stopwords.words('indonesian')).union({'dan', 'yang', 'di', 'dari', 'pada', 'untuk', 'dengan', 'ke', 'dalam', 'adalah'}),
-    'es': set(stopwords.words('spanish')).union({'y', 'el', 'en', 'con', 'para', 'de'}),
-    'fr': set(stopwords.words('french')).union({'et', 'le', 'est', 'dans', 'sur', 'avec'})
+    'en': {'said', 'will', 'also', 'one', 'new', 'make'},
+    'id': {'dan', 'yang', 'di', 'dari', 'pada', 'untuk', 'dengan', 'ke', 'dalam', 'adalah'},
+    'es': {'y', 'el', 'en', 'con', 'para', 'de'},
+    'fr': {'et', 'le', 'est', 'dans', 'sur', 'avec'}
 }
-
 
 # Function to fetch and parse the article from the given URL
 def fetch_article(url):
@@ -46,8 +40,9 @@ def fetch_article(url):
 
 # Function to summarize the article into key points and generate infographic
 def summarize_article_flexible(article, num_clusters=2):
-    sentences = sent_tokenize(article)
-    vectorizer = TfidfVectorizer(stop_words='english')
+    doc = nlp_en(article)  # Change this to nlp_id for Indonesian articles
+    sentences = [sent.text for sent in doc.sents]
+    vectorizer = TfidfVectorizer(stop_words='english')  # Modify based on language
     X = vectorizer.fit_transform(sentences)
     kmeans = KMeans(n_clusters=num_clusters, n_init=10)
     kmeans.fit(X)
@@ -77,8 +72,8 @@ def summarize_article_flexible(article, num_clusters=2):
 
 # Function to generate a longer summary using all sentences
 def long_summary(article):
-    sentences = sent_tokenize(article)
-    return ' '.join(sentences)
+    doc = nlp_en(article)  # Change this to nlp_id for Indonesian articles
+    return ' '.join([sent.text for sent in doc.sents])
 
 # Function to translate the article to a specific language
 def translate_article(article, dest_language='en'):
@@ -97,8 +92,8 @@ def translate_article(article, dest_language='en'):
 # Function to generate hashtags from title and content
 def generate_hashtags(title, content, lang='en', num_hashtags=5):
     stop_words_set = stop_words.get(lang, set())
-    title_words = [word for word in word_tokenize(title.lower()) if word.isalnum() and len(word) > 3 and word not in stop_words_set]
-    content_words = [word for word in word_tokenize(content.lower()) if word.isalnum() and len(word) > 3 and word not in stop_words_set]
+    title_words = [word for word in title.lower().split() if word.isalnum() and len(word) > 3 and word not in stop_words_set]
+    content_words = [word for word in content.lower().split() if word.isalnum() and len(word) > 3 and word not in stop_words_set]
     
     # Combine title and content words, giving more weight to title words
     keywords = title_words * 2 + content_words  # Doubling title words to increase their weight
@@ -116,9 +111,6 @@ def generate_hashtags(title, content, lang='en', num_hashtags=5):
 
 # Main function to run the Streamlit app
 def main():
-     # Download necessary NLTK data
-    nltk.download('punkt', quiet=True)  # Add quiet=True to suppress output
-
     st.title('News Summarization & Hashtag Generator App')
 
     # Store URL and selected language in session state
